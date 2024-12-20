@@ -1,0 +1,87 @@
+# from airflow import DAG
+# from airflow.operators.python import PythonOperator
+# from airflow.hooks.postgres_hook import PostgresHook
+# import logging
+# import pandas as pd
+# import openpyxl
+# from openpyxl.styles import Font
+# from openpyxl.utils import get_column_letter
+# from datetime import datetime
+
+# # Hàm export dữ liệu từ bảng customer ra file Excel
+
+
+# def export_customer_to_excel(**kwargs):
+#     logger.info("=================================================================================")
+#     logger.info("=================================================================================")
+#     logger.info("=================================================================================")
+#     # Kết nối với PostgreSQL
+#     postgres_hook = PostgresHook(postgres_conn_id="postgres-db")
+#     connection = postgres_hook.get_conn()
+#     cursor = connection.cursor()
+
+#     # Truy vấn dữ liệu từ bảng customer
+#     query = "SELECT * FROM customer;"
+#     cursor.execute(query)
+#     rows = cursor.fetchall()
+#     columns = [desc[0] for desc in cursor.description]
+
+#     # Tạo DataFrame từ kết quả truy vấn
+#     df = pd.DataFrame(rows, columns=columns)
+    
+#     # Kiểm tra dữ liệu từ truy vấn SQL
+#     if df.empty:
+#         raise ValueError("Query returned no data.")
+#     else:
+#         logging.info(f"Query returned {len(df)} rows.")
+
+#     # Ghi dữ liệu ra file Excel
+#     # file_path = "./export/customer_data.xlsx"  # Đường dẫn file Excel
+#     # df.to_excel(file_path, index=False, engine="openpyxl")
+#     # print(f"Exported data to {file_path}")
+
+#     template_path = './temp/template.xlsx'
+#     output_path = './export/customer_data_filled.xlsx'
+#     wb = openpyxl.load_workbook(template_path)
+#     ws = wb.active
+#     # Kiểm tra xem worksheet có được tải đúng không
+#     if ws is None:
+#         raise ValueError(f"Worksheet is None, template file may be corrupted or empty.")
+#     logging.info(f"Worksheet loaded: {ws.title}")
+#     start_row = 3
+#     font_style = Font(name='Times New Roman', size=11, bold=False, italic=False) 
+#     for i, row in df.iterrows():
+#         for j, value in enumerate(row):
+#             col_letter = get_column_letter(j + 1)
+#             cell = ws[f'{col_letter}{start_row + i}']
+#             cell.value = value
+#             cell.font = font_style 
+
+#     wb.save(output_path)
+
+
+# # Khởi tạo logger
+# logger = logging.getLogger("airflow.task")
+# logger.setLevel(logging.INFO)
+# # Khởi tạo DAG
+# send_mail_args = {
+#     "owner": "airflow",
+#     "depends_on_past": False,
+#     "retries": 0,
+# }
+# with DAG(
+#     dag_id="export_customer_to_excel",
+#     default_args=send_mail_args,
+#     description="Export customer table to Excel",
+#     schedule_interval=None,
+#     start_date=datetime(2024, 12, 1),
+#     catchup=False,
+# ) as dag:
+
+#     # Task export dữ liệu
+#     export_task = PythonOperator(
+#         task_id="export_customer_to_excel",
+#         python_callable=export_customer_to_excel,
+#     )
+
+#     export_task

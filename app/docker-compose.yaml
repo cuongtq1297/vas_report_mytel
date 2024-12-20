@@ -1,0 +1,74 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  airflow-webserver:
+    build:
+      context: .
+      dockerfile: ../build/Dockerfile
+    container_name: airflow-webserver
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      ORACLE_HOME: /opt/oracle/instantclient
+      LD_LIBRARY_PATH: /opt/oracle/instantclient
+      TNS_ADMIN: opt/oracle/instantclient
+      AIRFLOW__SMTP__SMTP_HOST: smtp.gmail.com
+      AIRFLOW__SMTP__SMTP_STARTTLS: True
+      AIRFLOW__SMTP__SMTP_SSL: False
+      AIRFLOW__SMTP__SMTP_USER: hoangde489@gmail.com
+      AIRFLOW__SMTP__SMTP_PASSWORD: kzovweqzuykkbbdy
+      AIRFLOW__SMTP__SMTP_PORT: 587
+      AIRFLOW__SMTP__SMTP_MAIL_FROM: hoangde489@gmail.com
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    command: webserver
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./export:/opt/airflow/export
+      - ./temp:/opt/airflow/temp
+      - ./airflow-config:/opt/airflow
+
+  airflow-scheduler:
+    build:
+      context: .
+      dockerfile: ../build/Dockerfile
+    container_name: airflow-scheduler
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      _AIRFLOW_WWW_USER_USERNAME: admin
+      _AIRFLOW_WWW_USER_PASSWORD: admin
+      ORACLE_HOME: /opt/oracle/instantclient
+      LD_LIBRARY_PATH: /opt/oracle/instantclient
+      TNS_ADMIN: opt/oracle/instantclient
+      AIRFLOW__SMTP__SMTP_HOST: smtp.gmail.com
+      AIRFLOW__SMTP__SMTP_STARTTLS: True
+      AIRFLOW__SMTP__SMTP_SSL: False
+      AIRFLOW__SMTP__SMTP_USER: hoangde489@gmail.com
+      AIRFLOW__SMTP__SMTP_PASSWORD: kzovweqzuykkbbdy
+      AIRFLOW__SMTP__SMTP_PORT: 587
+      AIRFLOW__SMTP__SMTP_MAIL_FROM: hoangde489@gmail.com
+    depends_on:
+      - postgres
+    command: scheduler
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./export:/opt/airflow/export
+      - ./temp:/opt/airflow/temp
+      - ./airflow-config:/opt/airflow
+volumes:
+  postgres_data:

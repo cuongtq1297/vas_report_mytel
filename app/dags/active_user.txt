@@ -1,0 +1,84 @@
+from airflow import DAG
+from airflow.providers.postgres.operators.postgres import PostgresOperator
+# import logging
+from datetime import datetime
+
+# Khởi tạo logger
+# logger = logging.getLogger("airflow.task")
+# logger.setLevel(logging.INFO)
+# Khởi tạo DAG
+active_args = {
+    "owner": "airflow",
+    "depends_on_past": False,
+    "retries": 1,
+}
+with DAG(
+    dag_id="active_user",
+    default_args=active_args,
+    description="Active new user",
+    schedule_interval='*/5 * * * *',  # Chạy mỗi 5 phút
+    start_date=datetime(2024, 12, 1),
+    catchup=False,
+) as dag:
+    # Hàm ghi log với các tham số từ context
+    # def log_task_start(**context):
+    #     task_id = context["task_instance"].task_id
+    #     execution_date = context["execution_date"]
+    #     logger.info(f"Task {task_id} is starting at {execution_date}.")
+    #     logger.info("=================================================================================")
+    #     logger.info("=================================================================================")
+    #     logger.info("=================================================================================")
+        
+    
+    # def log_task_end(**context):
+    #     task_id = context["task_instance"].task_id
+    #     execution_date = context["execution_date"]
+    #     logger.info(f"Task {task_id} finished at {execution_date}.")
+    #     logger.info("=================================================================================")
+    #     logger.info("=================================================================================")
+    #     logger.info("=================================================================================")
+    
+        
+    # Task lấy các id user chưa active vào bảng temp
+    getInactiveUsers = PostgresOperator(
+        task_id="getInactiveUsers",
+        postgres_conn_id="postgres-db",
+        sql="""
+            INSERT INTO ACTIVE_USER_TEMP SELECT ID FROM CUSTOMER WHERE STATUS = '0';
+        """,
+    )
+    
+    # Ghi log trước và sau khi thực hiện task
+    # getInactiveUsers.pre_execute = log_task_start
+    # getInactiveUsers.post_execute = log_task_end
+
+    # Task lấy các id user chưa active insert vào bảng user_active
+    insertActiveUsers = PostgresOperator(
+        task_id="insertActiveUsers",
+        postgres_conn_id="postgres-db",
+        sql="""
+            INSERT INTO ACCOUNTS (CUSTOMER_ID) SELECT ID FROM ACTIVE_USER_TEMP;
+        """,
+    )
+    
+    # Cập nhật kết quả active cho user
+    updateCustomer = PostgresOperator(
+        task_id="updateCustomer",
+        postgres_conn_id="postgres-db",
+        sql="""
+            UPDATE CUSTOMER SET STATUS = '1' WHERE ID IN (SELECT ID FROM ACTIVE_USER_TEMP);
+        """,
+    )
+    
+    # Xóa bảng temp
+    deleteTemp = PostgresOperator(
+        task_id="deleteTemp",
+        postgres_conn_id="postgres-db",
+        sql="""
+            DELETE FROM ACTIVE_USER_TEMP;
+        """,
+    )
+    
+
+
+    getInactiveUsers >> insertActiveUsers >> updateCustomer >> deleteTemp
