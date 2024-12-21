@@ -3,6 +3,8 @@
 *.pyo
 *.pyd
 __pycache__
+app/dags/__pycache__/
+__pycache__/
 *.pdb
 *.egg
 *.egg-info
