@@ -68,93 +68,140 @@ ORDER BY
 """
 sql_pl3_1 = """
     WITH SERVICES AS (
-    SELECT DISTINCT(SERVICE_NAME) AS SERVICE_NAME FROM ACCUMULATE_BY_DAY 
-    WHERE TRUNC(CREATED_AT, 'MM') = TRUNC(TO_DATE(:input_date, 'YYYY-MM-DD'), 'MM')
+    SELECT DISTINCT(
+    CASE
+    	WHEN SERVICE_NAME IN ('FISH_BUY','FISH_HUNTER')
+        THEN 'FISH_BUY_HUNTER'
+    ELSE CAST(SERVICE_NAME AS VARCHAR2(100))
+    END)  AS SERVICE_NAME
+    FROM VAS_SERVICES WHERE STATUS = 1 
+    ORDER BY SERVICE_NAME
+    
 ),
 DATES AS (
-    SELECT TRUNC(TO_DATE(:input_date, 'YYYY-MM-DD'), 'MM') + LEVEL - 1 AS DAY_DATE
+    SELECT 
+        TRUNC(TO_DATE(:input_date, 'YYYY-MM-DD'), 'MM') + LEVEL - 1 AS DAY_DATE
     FROM DUAL
     CONNECT BY LEVEL <= LAST_DAY(TO_DATE(:input_date, 'YYYY-MM-DD')) - TRUNC(TO_DATE(:input_date, 'YYYY-MM-DD'), 'MM') + 1
 )
 SELECT 
     TO_CHAR(D.DAY_DATE, 'DD') day_,
     S.SERVICE_NAME,
-    NVL(B.QUANTITY, 0) AS QUANTITY
+    NVL(SUM(B.QUANTITY), 0) AS QUANTITY
 FROM 
     DATES D
 CROSS JOIN 
     SERVICES S
 LEFT JOIN 
-    (SELECT SERVICE_NAME, QUANTITY, CREATED_AT 
+    (SELECT 
+         CASE 
+             WHEN SERVICE_NAME IN ('FISH_BUY', 'FISH_HUNTER') THEN 'FISH_BUY_HUNTER'
+             ELSE CAST(SERVICE_NAME AS VARCHAR2(100))
+         END AS SERVICE_NAME, 
+         QUANTITY, 
+         CREATED_AT 
      FROM ACCUMULATE_BY_DAY 
      WHERE TRUNC(CREATED_AT) BETWEEN TRUNC(TO_DATE(:input_date, 'YYYY-MM-DD'), 'MM') 
                                  AND LAST_DAY(TO_DATE(:input_date, 'YYYY-MM-DD'))) B
 ON 
     S.SERVICE_NAME = B.SERVICE_NAME AND D.DAY_DATE = TRUNC(B.CREATED_AT)
+GROUP BY 
+    D.DAY_DATE, S.SERVICE_NAME
 ORDER BY 
     D.DAY_DATE, S.SERVICE_NAME
             """
 sql_pl3_2 = """
 WITH SERVICES AS (
-    SELECT DISTINCT(SERVICE_NAME) AS SERVICE_NAME FROM ACCUMULATE_BY_DAY 
-    WHERE TRUNC(CREATED_AT, 'MM') = TRUNC(TO_DATE(:input_date, 'YYYY-MM-DD'), 'MM')
+    SELECT DISTINCT(
+    CASE
+    	WHEN SERVICE_NAME IN ('FISH_BUY','FISH_HUNTER')
+        THEN 'FISH_BUY_HUNTER'
+    ELSE CAST(SERVICE_NAME AS VARCHAR2(100))
+    END)  AS SERVICE_NAME
+    FROM VAS_SERVICES WHERE STATUS = 1 
+    ORDER BY SERVICE_NAME
+    
 ),
 DATES AS (
-    SELECT TRUNC(TO_DATE(:input_date, 'YYYY-MM-DD'), 'MM') + LEVEL - 1 AS DAY_DATE
+    SELECT 
+        TRUNC(TO_DATE(:input_date, 'YYYY-MM-DD'), 'MM') + LEVEL - 1 AS DAY_DATE
     FROM DUAL
     CONNECT BY LEVEL <= LAST_DAY(TO_DATE(:input_date, 'YYYY-MM-DD')) - TRUNC(TO_DATE(:input_date, 'YYYY-MM-DD'), 'MM') + 1
 )
 SELECT 
     TO_CHAR(D.DAY_DATE, 'DD') day_,
     S.SERVICE_NAME,
-    NVL(B.QUANTITY, 0) AS QUANTITY
+    NVL(SUM(B.QUANTITY), 0) AS QUANTITY
 FROM 
     DATES D
 CROSS JOIN 
     SERVICES S
 LEFT JOIN 
-    (SELECT SERVICE_NAME, QUANTITY, CREATED_AT 
+    (SELECT 
+         CASE 
+             WHEN SERVICE_NAME IN ('FISH_BUY', 'FISH_HUNTER') THEN 'FISH_BUY_HUNTER'
+             ELSE CAST(SERVICE_NAME AS VARCHAR2(100))
+         END AS SERVICE_NAME, 
+         QUANTITY, 
+         CREATED_AT 
      FROM NEW_REGISTER_BY_DAY 
      WHERE TRUNC(CREATED_AT) BETWEEN TRUNC(TO_DATE(:input_date, 'YYYY-MM-DD'), 'MM') 
                                  AND LAST_DAY(TO_DATE(:input_date, 'YYYY-MM-DD'))) B
 ON 
     S.SERVICE_NAME = B.SERVICE_NAME AND D.DAY_DATE = TRUNC(B.CREATED_AT)
+GROUP BY 
+    D.DAY_DATE, S.SERVICE_NAME
 ORDER BY 
     D.DAY_DATE, S.SERVICE_NAME
 """
 sql_pl3_3 = """
 WITH SERVICES AS (
-    SELECT DISTINCT(SERVICE_NAME) AS SERVICE_NAME FROM ACCUMULATE_BY_DAY 
-    WHERE TRUNC(CREATED_AT, 'MM') = TRUNC(TO_DATE(:input_date, 'YYYY-MM-DD'), 'MM')
+    SELECT DISTINCT(
+    CASE
+    	WHEN SERVICE_NAME IN ('FISH_BUY','FISH_HUNTER')
+        THEN 'FISH_BUY_HUNTER'
+    ELSE CAST(SERVICE_NAME AS VARCHAR2(100))
+    END)  AS SERVICE_NAME
+    FROM VAS_SERVICES WHERE STATUS = 1 
+    ORDER BY SERVICE_NAME
+    
 ),
 DATES AS (
-    SELECT TRUNC(TO_DATE(:input_date, 'YYYY-MM-DD'), 'MM') + LEVEL - 1 AS DAY_DATE
+    SELECT 
+        TRUNC(TO_DATE(:input_date, 'YYYY-MM-DD'), 'MM') + LEVEL - 1 AS DAY_DATE
     FROM DUAL
     CONNECT BY LEVEL <= LAST_DAY(TO_DATE(:input_date, 'YYYY-MM-DD')) - TRUNC(TO_DATE(:input_date, 'YYYY-MM-DD'), 'MM') + 1
 )
 SELECT 
     TO_CHAR(D.DAY_DATE, 'DD') day_,
     S.SERVICE_NAME,
-    NVL(B.QUANTITY, 0) AS QUANTITY
+    NVL(SUM(B.QUANTITY), 0) AS QUANTITY
 FROM 
     DATES D
 CROSS JOIN 
     SERVICES S
 LEFT JOIN 
-    (SELECT SERVICE_NAME, QUANTITY, CREATED_AT 
-     FROM CANCEL_BY_DAY 
+    (SELECT 
+         CASE 
+             WHEN SERVICE_NAME IN ('FISH_BUY', 'FISH_HUNTER') THEN 'FISH_BUY_HUNTER'
+             ELSE CAST(SERVICE_NAME AS VARCHAR2(100))
+         END AS SERVICE_NAME, 
+         QUANTITY, 
+         CREATED_AT 
+     FROM CANCLE_BY_DAY 
      WHERE TRUNC(CREATED_AT) BETWEEN TRUNC(TO_DATE(:input_date, 'YYYY-MM-DD'), 'MM') 
                                  AND LAST_DAY(TO_DATE(:input_date, 'YYYY-MM-DD'))) B
 ON 
     S.SERVICE_NAME = B.SERVICE_NAME AND D.DAY_DATE = TRUNC(B.CREATED_AT)
+GROUP BY 
+    D.DAY_DATE, S.SERVICE_NAME
 ORDER BY 
     D.DAY_DATE, S.SERVICE_NAME
 
 """
 sql_pl4 = """
 WITH CHANNELS_MPI AS (
-    SELECT DISTINCT (CHANNEL) AS CHANNEL FROM 
-    CHANNEL_REPORT_BY_DAY crbd WHERE trunc(CREATED_AT) = TRUNC(to_date(:v_date,'yyyy-mm-dd'), 'mm') 
+    SELECT CHANNEL FROM VAS_CHANNELS WHERE STATUS = 1 
 )
 SELECT 
     c.CHANNEL,
@@ -232,7 +279,7 @@ def call_package_pl2():
     oracle_hook = OracleHook(oracle_conn_id='Mytel_DWH')
     try:
         sql1 = "PCK_REPORT_VAS_REVENUE_DAILY.GET_REVENUE_DAILY_DATA_VAS"
-        sql2 ="PCK_REPORT_VAS_REVENUE_DAILY.GET_REVENUE_DAILY_DATA_EXPORT_TMP"
+        # sql2 ="PCK_REPORT_VAS_REVENUE_DAILY.GET_REVENUE_DAILY_DATA_EXPORT_TMP"
         sql3 = "PCK_REPORT_VAS_REVENUE_DAILY.GET_ALL_DAYS_SERVICES_EXPORT_TMP"
         sql4 = "PCK_REPORT_VAS_REVENUE_DAILY.GET_REVENUE_DAILY_DATA_EXPORT"
         logger.info("===============call pck pl2===================")
@@ -240,10 +287,10 @@ def call_package_pl2():
             f"BEGIN {sql1}(:ngay_tong_hop); END;",
             parameters={"ngay_tong_hop": ngay_tong_hop.strftime("%Y-%m-%d")}
         )
-        oracle_hook.run(
-            f"BEGIN {sql2}(:ngay_tong_hop); END;",
-            parameters={"ngay_tong_hop": ngay_tong_hop.strftime("%Y-%m-%d")}
-        )
+        # oracle_hook.run(
+        #     f"BEGIN {sql2}(:ngay_tong_hop); END;",
+        #     parameters={"ngay_tong_hop": ngay_tong_hop.strftime("%Y-%m-%d")}
+        # )
         oracle_hook.run(
             f"BEGIN {sql3}; END;",
         )
@@ -535,7 +582,7 @@ def file_excel_processing(**kwargs):
 
         ######################
         # Lấy tên file từ đường dẫn
-        base_name = os.path.basename(template_path)
+        base_name = os.path.basename(pl + "_" + ngay_tong_hop.strftime("%d%m%Y") + ".xlsx")
         new_directory = "./export/"  # Đường dẫn thư mục bạn muốn lưu
         new_file_path = os.path.join(new_directory, base_name)
         wb.save(new_file_path)
@@ -591,7 +638,7 @@ with DAG(
     dag_id="vas_report_daily",
     default_args=vas_report_daily_args,
     description="Tien trinh tong hop du lieu VAS thi truong Mytel",
-    schedule_interval=None,  # Chạy thủ công
+    schedule_interval="0 9 * * *",  # Chạy lúc 9 giờ sáng mỗi ngày
     catchup=False,
 ) as dag:
     call_package_vas_daily = PythonOperator(
